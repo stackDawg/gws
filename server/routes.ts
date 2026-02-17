@@ -3,10 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 
-export async function registerRoutes(
-  httpServer: Server,
-  app: Express
-): Promise<Server> {
+export function registerRoutes(httpServer: Server, app: Express): Server {
   app.get(api.messages.list.path, async (req, res) => {
     const messages = await storage.getMessages();
     res.json(messages);
@@ -19,9 +16,6 @@ export async function registerRoutes(
     }
     res.json(message);
   });
-
-  // Initialize seed data
-  await seedDatabase();
 
   return httpServer;
 }

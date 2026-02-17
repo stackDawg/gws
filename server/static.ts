@@ -3,15 +3,19 @@ import fs from "fs";
 import path from "path";
 
 export function serveStatic(app: Express) {
-  const distPath = path.resolve(process.cwd(), "dist", "public");
+  // Use __dirname when running from our CJS bundle (dist/index.cjs); else cwd (Vercel serverless / dev)
+  const distPath =
+    typeof __dirname !== "undefined" && __dirname.endsWith("dist")
+      ? path.join(__dirname, "public")
+      : path.resolve(process.cwd(), "dist", "public");
+
   if (!fs.existsSync(distPath)) {
-    // In Vercel, the build might be in a different location or we might need to handle it differently
     console.warn(`Could not find the build directory: ${distPath}`);
   }
 
   app.use(express.static(distPath));
 
   app.get("*", (_req, res) => {
-    res.sendFile(path.resolve(distPath, "index.html"));
+    res.sendFile(path.join(distPath, "index.html"));
   });
 }

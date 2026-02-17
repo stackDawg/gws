@@ -1,7 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { serveStatic } from "./static";
 import { createServer } from "http";
+import { registerRoutes, seedDatabase } from "./routes";
+import { serveStatic } from "./static";
 
 const app = express();
 const httpServer = createServer(app);
@@ -59,49 +59,36 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
-  await registerRoutes(httpServer, app);
+// Register routes and static serving synchronously so the app is ready
+// before Vercel (or any serverless) invokes it. Seed DB in background.
+registerRoutes(httpServer, app);
 
-  app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
+  const status = err.status || err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
 
-    console.error("Internal Server Error:", err);
+  console.error("Internal Server Error:", err);
 
-    if (res.headersSent) {
-      return next(err);
-    }
+  if (res.headersSent) {
+    return next(err);
+  }
 
-    return res.status(status).json({ message });
-  });
+  return res.status(status).json({ message });
+});
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (process.env.NODE_ENV === "production") {
-    serveStatic(app);
-  } else {
+if (process.env.NODE_ENV === "production") {
+  serveStatic(app);
+} else {
+  (async () => {
     const { setupVite } = await import("./vite");
     await setupVite(httpServer, app);
-  }
-
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || "5000", 10);
-  if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
-    httpServer.listen(
-      {
-        port,
-        host: "0.0.0.0",
-        reusePort: true,
-      },
-      () => {
-        log(`serving on port ${port}`);
-      },
+    const devPort = parseInt(process.env.PORT || "5000", 10);
+    httpServer.listen(devPort, "0.0.0.0", () =>
+      log("serving on port " + devPort),
     );
-  }
-})();
+  })();
+}
+
+seedDatabase().catch((err) => console.error("Seed failed:", err));
 
 export default app;
