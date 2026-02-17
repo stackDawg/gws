@@ -1,9 +1,9 @@
-import { useState, useRef } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
+import { useState } from 'react';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { useMessages } from '@/hooks/use-messages';
 import { FallingHearts } from '@/components/FallingHearts';
 import { Stopwatch } from '@/components/Stopwatch';
-import { Loader2, Heart, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import roseImage from '@assets/Screenshot_2026-02-17_103429_1771304716149.png';
 
 export default function Home() {

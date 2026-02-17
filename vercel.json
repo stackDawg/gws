@@ -1,19 +1,7 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/node"
-    }
-  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "server/index.ts"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "server/index.ts"
-    }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
